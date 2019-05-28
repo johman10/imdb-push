@@ -26,6 +26,10 @@ module.exports = {
   rules: {
     'class-methods-use-this': 'off',
     indent: 'off',
-    '@typescript-eslint/indent': ['error', 2]
+    '@typescript-eslint/indent': ['error', 2],
+    'no-dupe-class-members': 'off',
+    'lines-between-class-members': 'off',
+    'no-useless-constructor': 'off',
+    '@typescript-eslint/no-useless-constructor': 'error'
   },
 };

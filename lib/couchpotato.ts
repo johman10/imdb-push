@@ -5,7 +5,10 @@ export default class Couchpotato {
 
   private apiKey: string
 
-  public constructor(baseUri: string, apiKey: string) {
+  public constructor(baseUri?: string, apiKey?: string) {
+    if (!baseUri) throw new Error('COUCHPOTATO_URI is required');
+    if (!apiKey) throw new Error('COUCHPOTATO_API_KEY is required');
+
     this.baseUri = baseUri;
     this.apiKey = apiKey;
   }

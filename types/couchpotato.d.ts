@@ -1,4 +1,4 @@
-interface CouchpotatoMovie {
+declare interface CouchpotatoMovie {
   status: string;
   info: {
     rating: {
@@ -55,7 +55,7 @@ interface CouchpotatoMovie {
   };
 }
 
-interface CouchpotatoAddResponse {
+declare interface CouchpotatoAddResponse {
   success: boolean;
   movie: CouchpotatoMovie;
 }

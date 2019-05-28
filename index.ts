@@ -22,12 +22,13 @@ function isPushCandidate(push: Push): boolean {
   return isCorrectDevice && isLink && isImdbTitle;
 }
 
-function getOmdbData(push: Push): Promise<OmdbRecord> {
-  const imdbId = push.url.match(/tt\d+/)[0];
+function getOmdbData(push: Push): Promise<GetResponse> {
+  const imdbId = (push.url.match(/tt\d+/) || [])[0];
+  if (!imdbId) return Promise.reject(new Error('notFound'));
   return omdb.get({ id: imdbId });
 }
 
-function handleSeriesPush(push: Push, omdbRecord: OmdbRecord): Promise<SonarrAddResponse> {
+function handleSeriesPush(push: Push, omdbRecord: GetResponse): Promise<SonarrAddResponse> {
   return findByTmdbId(omdbRecord.imdbid)
     .then(tvdbSeries => (
       sonarr.searchByTvdbId(tvdbSeries.id)
@@ -58,6 +59,14 @@ function handleError(push: Push, error: Error): void {
         'It seems like this IMDB item is not a movie, nor a series. For now I only support movies and series.',
       );
       break;
+    case 'notFound':
+      pushToDevice(
+        pusher,
+        push.source_device_iden,
+        'This movie or series could not be found',
+        "It seems like OMDB doesn't know about this movie (yet), try again at another time.",
+      );
+      break;
     default:
       pushToDevice(
         pusher,
@@ -70,7 +79,7 @@ function handleError(push: Push, error: Error): void {
 
 function handlePush(push: Push): Promise<void> {
   return getOmdbData(push)
-    .then((omdbRecord: OmdbRecord) => {
+    .then((omdbRecord: GetResponse): Promise<CouchpotatoAddResponse | SonarrAddResponse> => {
       switch (omdbRecord.type) {
         case 'movie':
           return couchpotato.addMovieByImdbId(omdbRecord.imdbid);
@@ -81,17 +90,17 @@ function handlePush(push: Push): Promise<void> {
       }
     })
     .then((addedResponse: CouchpotatoAddResponse | SonarrAddResponse) => {
-      const title = addedResponse.title || addedResponse.movie.info.original_title;
-      const service = addedResponse.movie ? 'CouchPotato' : 'Sonarr';
+      const title = (addedResponse as SonarrAddResponse).title || (addedResponse as CouchpotatoAddResponse).movie.info.original_title;
+      const service = (addedResponse as CouchpotatoAddResponse).movie ? 'CouchPotato' : 'Sonarr';
       const message = service === 'Sonarr' ? 'The first season is monitored by default' : '';
-      return pushToDevice(
+      pushToDevice(
         pusher,
         push.source_device_iden,
         `${title} was successfully added to ${service}`,
         message,
       );
     })
-    .catch(handleError.bind(this, push));
+    .catch(handleError.bind(null, push));
 }
 
 function handleTickle(type: string): Promise<void> {
@@ -103,7 +112,7 @@ function handleTickle(type: string): Promise<void> {
   };
 
   return pusher.history(options)
-    .then((history: { pushes: Push[]}) => {
+    .then((history) => {
       lastChecked = Date.now() / 1000;
       history.pushes.forEach((push: Push) => {
         if (!isPushCandidate(push)) return;

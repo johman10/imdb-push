@@ -6,7 +6,10 @@ export default class Sonarr {
 
   private apiKey: string
 
-  public constructor(baseUri: string, apiKey: string) {
+  public constructor(baseUri?: string, apiKey?: string) {
+    if (!baseUri) throw new Error('SONARR_URI is required');
+    if (!apiKey) throw new Error('SONARR_API_KEY is required');
+
     this.baseUri = baseUri;
     this.apiKey = apiKey;
   }

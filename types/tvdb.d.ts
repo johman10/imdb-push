@@ -1,4 +1,4 @@
-interface TvdbSeries {
+declare interface TvdbSeries {
   seriesid: number;
   language: string;
   SeriesName: string;
@@ -8,4 +8,10 @@ interface TvdbSeries {
   IMDB_ID: string;
   zap2it_id: string;
   id: number;
+}
+
+declare interface TvdbResponse {
+  Data: {
+    Series: TvdbSeries;
+  };
 }
