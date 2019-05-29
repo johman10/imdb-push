@@ -24,12 +24,13 @@ module.exports = {
     }
   },
   rules: {
-    'class-methods-use-this': 'off',
-    indent: 'off',
     '@typescript-eslint/indent': ['error', 2],
-    'no-dupe-class-members': 'off',
+    '@typescript-eslint/no-useless-constructor': 'error',
+    'class-methods-use-this': 'off',
     'lines-between-class-members': 'off',
+    'no-dupe-class-members': 'off',
+    'no-undef': 'off',
     'no-useless-constructor': 'off',
-    '@typescript-eslint/no-useless-constructor': 'error'
+    indent: 'off',
   },
 };

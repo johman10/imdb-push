@@ -6,5 +6,10 @@ module.exports = {
   setupFiles: [
     './config/jest.js',
   ],
+  globals: {
+    DeviceIcon: {
+      system: 'system',
+    },
+  },
   testEnvironment: 'node',
 };

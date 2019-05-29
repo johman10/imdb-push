@@ -20,36 +20,36 @@ export default class Sonarr {
 
   private series(): Promise<SonarrSeries[]> {
     const url = `${this.baseUrl}/series?apikey=${this.apiKey}`;
-    return fetch(url).then(response => response.json());
+    return fetch(url).then((response): Promise<SonarrSeries[]> => response.json());
   }
 
   public searchByTvdbId(tvdbId: number): Promise<SonarrSeries> {
-    return this.series().then((exisitingSeries) => {
-      const existingSerie = exisitingSeries.find(series => series.tvdbId === tvdbId);
+    return this.series().then((exisitingSeries): Promise<SonarrSeries> | SonarrSeries => {
+      const existingSerie = exisitingSeries.find((series): boolean => series.tvdbId === tvdbId);
       if (existingSerie) return existingSerie;
 
       const url = `${this.baseUrl}/series/lookup?apikey=${this.apiKey}&term=tvdb:${tvdbId}`;
       return fetch(url)
-        .then(response => response.json())
-        .then(response => response[0]);
+        .then((response): Promise<SonarrSeries[]> => response.json())
+        .then((response): SonarrSeries => response[0]);
     });
   }
 
   private rootFolder(): Promise<string> {
     const url = `${this.baseUrl}/rootfolder?apikey=${this.apiKey}`;
     return fetch(url)
-      .then(response => response.json())
-      .then(response => response[0].path);
+      .then((response): Promise<SonarrFolder[]> => response.json())
+      .then((response): string => response[0].path);
   }
 
   private findProfileId(profileName: string): Promise<number> {
     const url = `${this.baseUrl}/profile?apikey=${this.apiKey}`;
     return fetch(url)
-      .then(response => response.json())
-      .then(profiles => (
-        profiles.find((profile: SonarrProfile) => profile.name === profileName)
+      .then((response): Promise<SonarrProfile[]> => response.json())
+      .then((profiles): SonarrProfile | undefined => (
+        profiles.find((profile): boolean => profile.name === profileName)
       ))
-      .then((profile) => {
+      .then((profile): number => {
         if (!profile) throw new Error('The SONARR_PROFILE env variable is not setup correctly');
         return profile.id;
       });
@@ -60,16 +60,18 @@ export default class Sonarr {
     return `${sonarrSeries.title} (${sonarrSeries.year})`;
   }
 
-  public addSeries(sonarrSeries: SonarrSeries, { profileName }: { profileName: string }): Promise<SonarrAddResponse> {
+  public addSeries(
+    sonarrSeries: SonarrSeries,
+    { profileName }: { profileName: string },
+  ): Promise<SonarrAddResponse> {
     if (sonarrSeries.id) return Promise.reject(new Error('alreadyExists'));
 
     const seasons = sonarrSeries.seasons.map((season: SonarrSeason): SonarrSeason => ({
       seasonNumber: season.seasonNumber,
-      // monitored: season.seasonNumber === 1,
-      monitored: false,
+      monitored: season.seasonNumber === 1,
     }));
     return Promise.all([this.findProfileId(profileName), this.rootFolder()])
-      .then(([profileId, rootFolderPath]) => {
+      .then(([profileId, rootFolderPath]): Promise<SonarrAddResponse> => {
         const body = JSON.stringify({
           title: sonarrSeries.title,
           tvdbId: sonarrSeries.tvdbId,
@@ -90,8 +92,7 @@ export default class Sonarr {
         return fetch(url, {
           method: 'POST',
           body,
-        });
-      })
-      .then(response => response.json());
+        }).then((response): Promise<SonarrAddResponse> => response.json());
+      });
   }
 }

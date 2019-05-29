@@ -78,13 +78,7 @@ interface DevicesOptions {
 interface Stream {
   connect(): void;
   close(): void;
-  on(event: 'connect', callback: () => void): void;
-  on(event: 'close', callback: () => void): void;
-  on(event: 'error', callback: (error: any) => void): void;
-  on(event: 'message', callback: (message: any) => void): void;
-  on(event: 'nop', callback: () => void): void;
-  on(event: 'tickle', callback: (tickle: void) => void): void;
-  on(event: 'push', callback: (push: Push) => void): void;
+  on(event: 'tickle', callback: (tickle: string) => void): void;
 }
 
 declare class Pushbullet {
@@ -98,8 +92,7 @@ declare class Pushbullet {
 
   public note(deviceParams: string, title: string, body: string): Promise<Push>;
 
-  // TODO: DEFINE!
-  public stream(): any;
+  public stream(): Stream;
 }
 
 declare module 'pushbullet' {

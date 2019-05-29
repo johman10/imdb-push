@@ -1,9 +1,9 @@
 import fetch from 'node-fetch';
 
 export default class Couchpotato {
-  private baseUri: string
+  private baseUri: string;
 
-  private apiKey: string
+  private apiKey: string;
 
   public constructor(baseUri?: string, apiKey?: string) {
     if (!baseUri) throw new Error('COUCHPOTATO_URI is required');
@@ -19,6 +19,6 @@ export default class Couchpotato {
 
   public addMovieByImdbId(imdbId: string): Promise<CouchpotatoAddResponse> {
     const url = `${this.baseUrl}/movie.add?identifier=${imdbId}`;
-    return fetch(url).then(response => response.json());
+    return fetch(url).then((response): Promise<CouchpotatoAddResponse> => response.json());
   }
 }

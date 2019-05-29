@@ -23,6 +23,13 @@ interface SonarrAddResponse {
   id: number;
 }
 
+interface SonarrFolder {
+  path: string;
+  freeSpace: number;
+  unmappedFolders: SonarrFolder[];
+  id: number;
+}
+
 interface SonarrSeries {
   title: string;
   sortTitle: string;

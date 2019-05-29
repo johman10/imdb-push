@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "start": "source .env && ts-node-dev --pretty --respawn --transpileOnly ./index.ts",
-    "production": "tsc --build tsconfig.json && node ./build/index.js",
+    "start": "source .env && npm run build && node ./build/index.js",
+    "build": "rm -rf build && tsc --build tsconfig.json",
     "lint": "eslint . --ext .ts,.js",
     "test": "jest"
   },
@@ -26,8 +26,7 @@
     "eslint-import-resolver-typescript": "^1.1.1",
     "eslint-plugin-import": "^2.16.0",
     "jest": "^24.1.0",
-    "jest-fetch-mock": "^2.1.1",
-    "ts-node-dev": "^1.0.0-pre.32"
+    "jest-fetch-mock": "^2.1.1"
   },
   "dependencies": {
     "typescript": "^3.3.3333",

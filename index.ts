@@ -30,10 +30,10 @@ function getOmdbData(push: Push): Promise<GetResponse> {
 
 function handleSeriesPush(push: Push, omdbRecord: GetResponse): Promise<SonarrAddResponse> {
   return findByTmdbId(omdbRecord.imdbid)
-    .then(tvdbSeries => (
+    .then((tvdbSeries): Promise<SonarrSeries> => (
       sonarr.searchByTvdbId(tvdbSeries.id)
     ))
-    .then(sonarrSeries => (
+    .then((sonarrSeries): Promise<SonarrAddResponse> => (
       sonarr.addSeries(sonarrSeries, { profileName: 'Any' })
     ));
 }
@@ -89,8 +89,9 @@ function handlePush(push: Push): Promise<void> {
           return Promise.reject(new Error('invalidShare'));
       }
     })
-    .then((addedResponse: CouchpotatoAddResponse | SonarrAddResponse) => {
-      const title = (addedResponse as SonarrAddResponse).title || (addedResponse as CouchpotatoAddResponse).movie.info.original_title;
+    .then((addedResponse: CouchpotatoAddResponse | SonarrAddResponse): void => {
+      const title = (addedResponse as SonarrAddResponse).title
+        || (addedResponse as CouchpotatoAddResponse).movie.info.original_title;
       const service = (addedResponse as CouchpotatoAddResponse).movie ? 'CouchPotato' : 'Sonarr';
       const message = service === 'Sonarr' ? 'The first season is monitored by default' : '';
       pushToDevice(
@@ -108,13 +109,13 @@ function handleTickle(type: string): Promise<void> {
 
   const options = {
     limit: 10,
-    modified_after: lastChecked,
+    modified_after: lastChecked, // eslint-disable-line @typescript-eslint/camelcase
   };
 
   return pusher.history(options)
-    .then((history) => {
+    .then((history): void => {
       lastChecked = Date.now() / 1000;
-      history.pushes.forEach((push: Push) => {
+      history.pushes.forEach((push: Push): void => {
         if (!isPushCandidate(push)) return;
         handlePush(push);
       });
@@ -122,7 +123,7 @@ function handleTickle(type: string): Promise<void> {
 }
 
 findOrCreateDevice(pusher, NICKNAME)
-  .then((appDeviceResponse) => {
+  .then((appDeviceResponse): void => {
     appDevice = appDeviceResponse;
     const stream = pusher.stream();
     stream.connect();
