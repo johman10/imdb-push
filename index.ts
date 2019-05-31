@@ -11,7 +11,7 @@ const omdb = new Omdb(process.env.OMDB_API_KEY);
 const couchpotato = new Couchpotato(process.env.COUCHPOTATO_URI, process.env.COUCHPOTATO_API_KEY);
 const sonarr = new Sonarr(process.env.SONARR_URI, process.env.SONARR_API_KEY);
 
-const NICKNAME = 'node-app';
+const NICKNAME = 'imdb-push';
 let lastChecked = Date.now() / 1000;
 let appDevice: Device;
 
