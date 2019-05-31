@@ -1,13 +1,4 @@
-declare enum DeviceIcon {
-  desktop = 'desktop',
-  browser = 'browser',
-  website = 'website',
-  laptop = 'laptop',
-  tablet = 'tablet',
-  phone = 'phone',
-  watch = 'watch',
-  system = 'system',
-}
+type IconTypes = 'desktop'|'browser'|'website'|'laptop'|'tablet'|'phone'|'watch'|'system';
 
 declare interface Push {
   active: boolean;
@@ -36,7 +27,7 @@ declare interface Device {
   active: boolean;
   created: number;
   modified: number;
-  icon: DeviceIcon;
+  icon: IconTypes;
   nickname: string;
   generated_nickname: boolean;
   manufacturer: string;
@@ -65,7 +56,7 @@ interface DeviceOptions {
   manufacturer?: string;
   push_token?: string;
   app_version?: number;
-  icon?: DeviceIcon;
+  icon?: IconTypes;
   has_sms?: boolean;
 }
 

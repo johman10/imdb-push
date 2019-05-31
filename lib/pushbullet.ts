@@ -1,3 +1,7 @@
+enum DeviceIcon {
+  system = 'system'
+}
+
 function createDevice(pusher: Pushbullet, nickname: string): Promise<Device> {
   const deviceOptions = {
     nickname,
