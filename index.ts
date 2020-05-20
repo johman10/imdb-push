@@ -2,14 +2,26 @@ import PushBullet from 'pushbullet';
 import Omdb from 'omdbapi';
 
 import { findOrCreateDevice, pushToDevice } from './lib/pushbullet';
-import Couchpotato from './lib/couchpotato';
+import Radarr from './lib/radarr';
 import Sonarr from './lib/sonarr';
 import findByTmdbId from './lib/tvdb';
 
 const pusher = new PushBullet(process.env.PUSHBULLET_API_KEY);
 const omdb = new Omdb(process.env.OMDB_API_KEY);
-const couchpotato = new Couchpotato(process.env.COUCHPOTATO_URI, process.env.COUCHPOTATO_API_KEY);
-const sonarr = new Sonarr(process.env.SONARR_URI, process.env.SONARR_API_KEY);
+const radarr = new Radarr(
+  process.env.RADARR_URI,
+  process.env.RADARR_API_KEY,
+  process.env.RADARR_ROOT_FOLDER_PATH,
+  process.env.RADARR_PROFILE_ID,
+);
+const sonarr = new Sonarr(
+  process.env.SONARR_URI,
+  process.env.SONARR_API_KEY,
+  process.env.SONARR_ROOT_FOLDER_PATH,
+  process.env.SONARR_PROFILE_ID,
+);
+
+console.log('started');
 
 const NICKNAME = 'imdb-push';
 let lastChecked = Date.now() / 1000;
@@ -28,13 +40,20 @@ function getOmdbData(push: Push): Promise<GetResponse> {
   return omdb.get({ id: imdbId });
 }
 
-function handleSeriesPush(push: Push, omdbRecord: GetResponse): Promise<SonarrAddResponse> {
+function handleSeriesPush(omdbRecord: GetResponse): Promise<SonarrAddResponse> {
   return findByTmdbId(omdbRecord.imdbid)
     .then((tvdbSeries): Promise<SonarrSeries> => (
       sonarr.searchByTvdbId(tvdbSeries.id)
     ))
     .then((sonarrSeries): Promise<SonarrAddResponse> => (
-      sonarr.addSeries(sonarrSeries, { profileName: 'Any' })
+      sonarr.addSeries(sonarrSeries)
+    ));
+}
+
+function handleMoviesPush(omdbRecord: GetResponse): Promise<RadarrAddResponse> {
+  return radarr.searchByImdbId(omdbRecord.imdbid)
+    .then((radarrMovie): Promise<RadarrAddResponse> => (
+      radarr.addMovie(radarrMovie)
     ));
 }
 
@@ -72,27 +91,27 @@ function handleError(push: Push, error: Error): void {
         pusher,
         push.source_device_iden,
         'Something went wrong.',
-        'Please try again, if the problem persists check if Sonarr and Couchpotato are running.',
+        'Please try again, if the problem persists check if Sonarr and Radarr are running.',
       );
   }
 }
 
 function handlePush(push: Push): Promise<void> {
   return getOmdbData(push)
-    .then((omdbRecord: GetResponse): Promise<CouchpotatoAddResponse | SonarrAddResponse> => {
+    .then((omdbRecord: GetResponse): Promise<RadarrAddResponse | SonarrAddResponse> => {
       switch (omdbRecord.type) {
         case 'movie':
-          return couchpotato.addMovieByImdbId(omdbRecord.imdbid);
+          return handleMoviesPush(omdbRecord);
         case 'series':
-          return handleSeriesPush(push, omdbRecord);
+          return handleSeriesPush(omdbRecord);
         default:
           return Promise.reject(new Error('invalidShare'));
       }
     })
-    .then((addedResponse: CouchpotatoAddResponse | SonarrAddResponse): void => {
-      const title = (addedResponse as SonarrAddResponse).title
-        || (addedResponse as CouchpotatoAddResponse).movie.info.original_title;
-      const service = (addedResponse as CouchpotatoAddResponse).movie ? 'CouchPotato' : 'Sonarr';
+    .then((addedResponse: RadarrAddResponse | SonarrAddResponse): void => {
+      const { title } = addedResponse;
+      if (!title) throw new Error('somethingWentWrong');
+      const service = (addedResponse as SonarrAddResponse).seasons ? 'Sonarr' : 'Radarr';
       const message = service === 'Sonarr' ? 'The first season is monitored by default' : '';
       pushToDevice(
         pusher,

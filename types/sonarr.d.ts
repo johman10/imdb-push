@@ -23,13 +23,6 @@ interface SonarrAddResponse {
   id: number;
 }
 
-interface SonarrFolder {
-  path: string;
-  freeSpace: number;
-  unmappedFolders: SonarrFolder[];
-  id: number;
-}
-
 interface SonarrSeries {
   title: string;
   sortTitle: string;
@@ -65,22 +58,4 @@ interface SonarrSeries {
   };
   qualityProfileId: number;
   id?: number;
-}
-
-interface SonarrQuality {
-  quality: {
-    id: number;
-    name: string;
-  };
-  allowed: boolean;
-}
-
-interface SonarrProfile {
-  name: string;
-  cutoff: {
-    id: number;
-    name: string;
-  };
-  items: [SonarrQuality];
-  id: number;
 }

@@ -1,17 +1,29 @@
 import fetch from 'node-fetch';
-import path from 'path';
 
 export default class Sonarr {
   private baseUri: string
 
   private apiKey: string
 
-  public constructor(baseUri?: string, apiKey?: string) {
+  private rootFolderPath: string
+
+  private profileId: number
+
+  public constructor(
+    baseUri?: string,
+    apiKey?: string,
+    rootFolderPath?: string,
+    profileId?: string,
+  ) {
     if (!baseUri) throw new Error('SONARR_URI is required');
     if (!apiKey) throw new Error('SONARR_API_KEY is required');
+    if (!rootFolderPath) throw new Error('SONARR_ROOT_FOLDER_PATH is required');
+    if (!profileId) throw new Error('SONARR_PROFILE_ID is required');
 
     this.baseUri = baseUri;
     this.apiKey = apiKey;
+    this.rootFolderPath = rootFolderPath;
+    this.profileId = parseInt(profileId, 10);
   }
 
   private get baseUrl(): string {
@@ -35,64 +47,34 @@ export default class Sonarr {
     });
   }
 
-  private rootFolder(): Promise<string> {
-    const url = `${this.baseUrl}/rootfolder?apikey=${this.apiKey}`;
-    return fetch(url)
-      .then((response): Promise<SonarrFolder[]> => response.json())
-      .then((response): string => response[0].path);
-  }
-
-  private findProfileId(profileName: string): Promise<number> {
-    const url = `${this.baseUrl}/profile?apikey=${this.apiKey}`;
-    return fetch(url)
-      .then((response): Promise<SonarrProfile[]> => response.json())
-      .then((profiles): SonarrProfile | undefined => (
-        profiles.find((profile): boolean => profile.name === profileName)
-      ))
-      .then((profile): number => {
-        if (!profile) throw new Error('The SONARR_PROFILE env variable is not setup correctly');
-        return profile.id;
-      });
-  }
-
-  private folderName(sonarrSeries: SonarrSeries): string {
-    if (sonarrSeries.title.includes(`(${sonarrSeries.year})`)) return sonarrSeries.title;
-    return `${sonarrSeries.title} (${sonarrSeries.year})`;
-  }
-
-  public addSeries(
-    sonarrSeries: SonarrSeries,
-    { profileName }: { profileName: string },
-  ): Promise<SonarrAddResponse> {
+  public addSeries(sonarrSeries: SonarrSeries): Promise<SonarrAddResponse> {
     if (sonarrSeries.id) return Promise.reject(new Error('alreadyExists'));
 
     const seasons = sonarrSeries.seasons.map((season: SonarrSeason): SonarrSeason => ({
       seasonNumber: season.seasonNumber,
       monitored: season.seasonNumber === 1,
     }));
-    return Promise.all([this.findProfileId(profileName), this.rootFolder()])
-      .then(([profileId, rootFolderPath]): Promise<SonarrAddResponse> => {
-        const body = JSON.stringify({
-          title: sonarrSeries.title,
-          tvdbId: sonarrSeries.tvdbId,
-          qualityProfileId: profileId,
-          titleSlug: sonarrSeries.titleSlug,
-          seasonFolder: true,
-          images: sonarrSeries.images,
-          path: path.join(rootFolderPath, this.folderName(sonarrSeries)),
-          addOptions: {
-            ignoreEpisodesWithFiles: true,
-            ignoreEpisodesWithoutFiles: false,
-            searchForMissingEpisodes: true,
-          },
-          seasons,
-        });
-        const url = `${this.baseUrl}/series?apikey=${this.apiKey}`;
 
-        return fetch(url, {
-          method: 'POST',
-          body,
-        }).then((response): Promise<SonarrAddResponse> => response.json());
-      });
+    const body = JSON.stringify({
+      title: sonarrSeries.title,
+      tvdbId: sonarrSeries.tvdbId,
+      qualityProfileId: this.profileId,
+      titleSlug: sonarrSeries.titleSlug,
+      seasonFolder: true,
+      images: sonarrSeries.images,
+      rootFolderPath: this.rootFolderPath,
+      addOptions: {
+        ignoreEpisodesWithFiles: true,
+        ignoreEpisodesWithoutFiles: false,
+        searchForMissingEpisodes: true,
+      },
+      seasons,
+    });
+    const url = `${this.baseUrl}/series?apikey=${this.apiKey}`;
+
+    return fetch(url, {
+      method: 'POST',
+      body,
+    }).then((response): Promise<SonarrAddResponse> => response.json());
   }
 }
