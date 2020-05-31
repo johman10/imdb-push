@@ -4,10 +4,14 @@ After=network.target
 
 [Service]
 Type=simple
-User=pi
+User=imdb-push
+Group=imdb-push
 WorkingDirectory=/path/to/imdb-push
 EnvironmentFile=/path/to/imdb-push/.env
 ExecStart=/path/to/node /path/to/imdb-push/build/index.js
+
+Restart=on-failure
+RestartSec=5s
 
 [Install]
 Alias=imdbpush.service
