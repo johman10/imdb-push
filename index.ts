@@ -42,19 +42,14 @@ function getOmdbData(push: Push): Promise<GetResponse> {
 
 function handleSeriesPush(omdbRecord: GetResponse): Promise<SonarrAddResponse> {
   return findByTmdbId(omdbRecord.imdbid)
-    .then((tvdbSeries): Promise<SonarrSeries> => (
-      sonarr.searchByTvdbId(tvdbSeries.id)
-    ))
-    .then((sonarrSeries): Promise<SonarrAddResponse> => (
-      sonarr.addSeries(sonarrSeries)
-    ));
+    .then((tvdbSeries): Promise<SonarrSeries> => sonarr.searchByTvdbId(tvdbSeries.id))
+    .then((sonarrSeries): Promise<SonarrAddResponse> => sonarr.addSeries(sonarrSeries));
 }
 
 function handleMoviesPush(omdbRecord: GetResponse): Promise<RadarrAddResponse> {
-  return radarr.searchByImdbId(omdbRecord.imdbid)
-    .then((radarrMovie): Promise<RadarrAddResponse> => (
-      radarr.addMovie(radarrMovie)
-    ));
+  return radarr
+    .searchByImdbId(omdbRecord.imdbid)
+    .then((radarrMovie): Promise<RadarrAddResponse> => radarr.addMovie(radarrMovie));
 }
 
 function handleError(push: Push, error: Error): void {
@@ -63,12 +58,7 @@ function handleError(push: Push, error: Error): void {
 
   switch (error && error.message) {
     case 'alreadyExists':
-      pushToDevice(
-        pusher,
-        push.source_device_iden,
-        'This item already exists.',
-        'Nothing was changed.',
-      );
+      pushToDevice(pusher, push.source_device_iden, 'This item already exists.', 'Nothing was changed.');
       break;
     case 'invalidShare':
       pushToDevice(
@@ -113,12 +103,7 @@ function handlePush(push: Push): Promise<void> {
       if (!title) throw new Error('somethingWentWrong');
       const service = (addedResponse as SonarrAddResponse).seasons ? 'Sonarr' : 'Radarr';
       const message = service === 'Sonarr' ? 'The first season is monitored by default' : '';
-      pushToDevice(
-        pusher,
-        push.source_device_iden,
-        `${title} was successfully added to ${service}`,
-        message,
-      );
+      pushToDevice(pusher, push.source_device_iden, `${title} was successfully added to ${service}`, message);
     })
     .catch(handleError.bind(null, push));
 }
@@ -128,24 +113,22 @@ function handleTickle(type: string): Promise<void> {
 
   const options = {
     limit: 10,
-    modified_after: lastChecked, // eslint-disable-line @typescript-eslint/camelcase
+    modified_after: lastChecked,
   };
 
-  return pusher.history(options)
-    .then((history): void => {
-      lastChecked = Date.now() / 1000;
-      history.pushes.forEach((push: Push): void => {
-        if (!isPushCandidate(push)) return;
-        handlePush(push);
-      });
+  return pusher.history(options).then((history): void => {
+    lastChecked = Date.now() / 1000;
+    history.pushes.forEach((push: Push): void => {
+      if (!isPushCandidate(push)) return;
+      handlePush(push);
     });
+  });
 }
 
-findOrCreateDevice(pusher, NICKNAME)
-  .then((appDeviceResponse): void => {
-    appDevice = appDeviceResponse;
-    const stream = pusher.stream();
-    stream.connect();
+findOrCreateDevice(pusher, NICKNAME).then((appDeviceResponse): void => {
+  appDevice = appDeviceResponse;
+  const stream = pusher.stream();
+  stream.connect();
 
-    stream.on('tickle', handleTickle);
-  });
+  stream.on('tickle', handleTickle);
+});

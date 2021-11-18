@@ -1,20 +1,15 @@
 import fetch from 'node-fetch';
 
 export default class Sonarr {
-  private baseUri: string
+  private baseUri: string;
 
-  private apiKey: string
+  private apiKey: string;
 
-  private rootFolderPath: string
+  private rootFolderPath: string;
 
-  private profileId: number
+  private profileId: number;
 
-  public constructor(
-    baseUri?: string,
-    apiKey?: string,
-    rootFolderPath?: string,
-    profileId?: string,
-  ) {
+  public constructor(baseUri?: string, apiKey?: string, rootFolderPath?: string, profileId?: string) {
     if (!baseUri) throw new Error('SONARR_URI is required');
     if (!apiKey) throw new Error('SONARR_API_KEY is required');
     if (!rootFolderPath) throw new Error('SONARR_ROOT_FOLDER_PATH is required');
@@ -50,10 +45,12 @@ export default class Sonarr {
   public addSeries(sonarrSeries: SonarrSeries): Promise<SonarrAddResponse> {
     if (sonarrSeries.id) return Promise.reject(new Error('alreadyExists'));
 
-    const seasons = sonarrSeries.seasons.map((season: SonarrSeason): SonarrSeason => ({
-      seasonNumber: season.seasonNumber,
-      monitored: season.seasonNumber === 1,
-    }));
+    const seasons = sonarrSeries.seasons.map(
+      (season: SonarrSeason): SonarrSeason => ({
+        seasonNumber: season.seasonNumber,
+        monitored: season.seasonNumber === 1,
+      }),
+    );
 
     const body = JSON.stringify({
       title: sonarrSeries.title,

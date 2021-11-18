@@ -3,8 +3,6 @@ module.exports = {
   clearMocks: true,
   coverageDirectory: 'coverage',
   verbose: true,
-  setupFiles: [
-    './config/jest.js',
-  ],
+  setupFiles: ['./config/jest.js'],
   testEnvironment: 'node',
 };

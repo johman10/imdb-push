@@ -1,3 +1,3 @@
-const fetch = require('jest-fetch-mock');
+import fetch from 'jest-fetch-mock';
 
 jest.setMock('node-fetch', fetch);

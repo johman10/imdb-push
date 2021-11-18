@@ -1,4 +1,4 @@
-type IconTypes = 'desktop'|'browser'|'website'|'laptop'|'tablet'|'phone'|'watch'|'system';
+type IconTypes = 'desktop' | 'browser' | 'website' | 'laptop' | 'tablet' | 'phone' | 'watch' | 'system';
 
 declare interface Push {
   active: boolean;
@@ -87,5 +87,5 @@ declare class Pushbullet {
 }
 
 declare module 'pushbullet' {
-  export = Pushbullet
+  export = Pushbullet;
 }

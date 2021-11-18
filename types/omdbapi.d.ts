@@ -15,7 +15,7 @@ declare interface SearchItem {
 declare interface SearchResponse {
   Search: SearchItem[];
   totalResults: string;
-  Response: 'True'|'False';
+  Response: 'True' | 'False';
 }
 
 declare interface Rating {
@@ -48,13 +48,13 @@ declare interface GetResponse {
   boxoffice: string;
   production: string;
   website: string;
-  response: 'True'|'False';
+  response: 'True' | 'False';
 }
 
 declare module 'omdbapi' {
   enum PlotTypes {
     short,
-    full
+    full,
   }
 
   interface SearchOptions {
@@ -86,10 +86,10 @@ declare module 'omdbapi' {
   class Omdbapi {
     public constructor(apiKey?: string);
 
-    public get(options: IdGetOptions|TitleGetOptions): Promise<GetResponse>;
+    public get(options: IdGetOptions | TitleGetOptions): Promise<GetResponse>;
 
     public search(options: SearchOptions): Promise<SearchResponse>;
   }
 
-  export = Omdbapi
+  export = Omdbapi;
 }

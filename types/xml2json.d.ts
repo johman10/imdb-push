@@ -8,5 +8,5 @@ interface JsonOptions {
 }
 
 declare module 'xml2json' {
-  function toJson(xml: string, options?: JsonOptions): TvdbResponse
+  function toJson(xml: string, options?: JsonOptions): TvdbResponse;
 }
